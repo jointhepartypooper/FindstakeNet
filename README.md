@@ -11,6 +11,11 @@ Most cryptocoin mining requires specialized hardware, but Peercoin minting can b
 
 With FindStakeNet, you can find out in advance when your coin will mint to let you know to unlock your wallet just before it will find a stake and earn more coins. 
 
+
+
+#### Screenshot:
+![Alt text](https://i.imgur.com/2a70f6k.png "FindstakeNetJS")
+
 How to use
 ----------
 Start up Peercoin with an wallet and a configured peercoin.conf. No unlocking required.
