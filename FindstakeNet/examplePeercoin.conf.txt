@@ -1,0 +1,10 @@
+﻿listen=1
+server=1
+ 
+testnet=0
+debug=1
+txindex=1
+rpcuser=change_this_to_a_long_random_user
+rpcpassword=change_this_to_a_long_random_password
+
+rpcport=8332

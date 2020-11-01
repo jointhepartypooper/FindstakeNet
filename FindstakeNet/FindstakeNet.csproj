@@ -1,0 +1,139 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <ProjectGuid>{C881486C-D965-4A27-B361-507E4BF2281F}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>FindstakeNet</RootNamespace>
+    <AssemblyName>FindstakeNet</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <ApplicationIcon>Resources\favicon32.ico</ApplicationIcon>
+    <NoWin32Manifest>False</NoWin32Manifest>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>Full</DebugType>
+    <Optimize>False</Optimize>
+    <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>False</DebugSymbols>
+    <DebugType>None</DebugType>
+    <Optimize>True</Optimize>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="LiteDB">
+      <HintPath>refs\LiteDB.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>refs\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="SimpleInjector">
+      <HintPath>refs\SimpleInjector.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Implementation\BlockRepository.cs" />
+    <Compile Include="Implementation\RPC\BlockParser.cs" />
+    <Compile Include="Implementation\RPC\TransactionResponse.cs" />
+    <Compile Include="Implementation\RPC\Unspent.cs" />
+    <Compile Include="Implementation\RPC\RPCClient.cs" />
+    <Compile Include="Implementation\RPC\RPCException.cs" />
+    <Compile Include="Implementation\RPC\DecodeRawTransactionResponse.cs" />
+    <Compile Include="Implementation\RPC\DifficultyResponse.cs" />
+    <Compile Include="Implementation\RPC\BlockResponse.cs" />
+    <Compile Include="Implementation\RPC\RawTransactionResponse.cs" />
+    <Compile Include="Implementation\RPC\RPCError.cs" />
+    <Compile Include="Implementation\RPC\RPCRequest.cs" />
+    <Compile Include="Implementation\RPC\TransactionParser.cs" />
+    <Compile Include="Implementation\SettingRepository.cs" />
+    <Compile Include="Implementation\TransactionRepository.cs" />
+    <Compile Include="Interface\IBlockParser.cs" />
+    <Compile Include="Interface\IBlockRepository.cs" />
+    <Compile Include="Interface\IRPCClient.cs" />
+    <Compile Include="Interface\ISettingsRepository.cs" />
+    <Compile Include="Interface\ITransactionParser.cs" />
+    <Compile Include="Interface\ITransactionRepository.cs" />
+    <Compile Include="Model\AddressTxoState.cs" />
+    <Compile Include="Model\BlockState.cs" />
+    <Compile Include="Model\FindstakeStatus.cs" />
+    <Compile Include="Model\OutputState.cs" />
+    <Compile Include="Model\SettingState.cs" />
+    <Compile Include="Model\TxState.cs" />
+    <Compile Include="Model\UnspentTransactionData.cs" />
+    <Compile Include="Model\UnspentTransactions.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UI\MainForm.cs" />
+    <Compile Include="UI\MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\UserControlFactory.cs" />
+    <Compile Include="UI\UserControlSettings.cs" />
+    <Compile Include="UI\UserControlSettings.Designer.cs">
+      <DependentUpon>UserControlSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\UserControlTxGrid.cs" />
+    <Compile Include="UI\UserControlTxGrid.Designer.cs">
+      <DependentUpon>UserControlTxGrid.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="examplePeercoin.conf.txt" />
+    <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Implementation" />
+    <Folder Include="Implementation\RPC" />
+    <Folder Include="Interface" />
+    <Folder Include="Model" />
+    <Folder Include="UI" />
+    <Folder Include="Resources" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="UI\MainForm.resx">
+      <DependentUpon>MainForm.Designer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\UserControlSettings.resx">
+      <DependentUpon>UserControlSettings.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\UserControlTxGrid.resx">
+      <DependentUpon>UserControlTxGrid.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PeercoinUtils\PeercoinUtils.csproj">
+      <Project>{785B3474-6130-41F1-B14D-AB1DA2AEC42A}</Project>
+      <Name>PeercoinUtils</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
