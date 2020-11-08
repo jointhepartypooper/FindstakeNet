@@ -15,6 +15,7 @@ With FindStakeNet, you can find out in advance when your coin will mint to let y
 
 #### Screenshot:
 ![Alt text](https://i.imgur.com/2a70f6k.png "FindstakeNetJS")
+![Alt text](https://i.imgur.com/elyOpLM.png "peercoind command listunspent")
 
 How to use
 ----------
