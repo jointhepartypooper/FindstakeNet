@@ -237,6 +237,15 @@ namespace PeercoinUtils.Crypto
 		}
 
 
+		public static uint GetExponent(BigInteger n)
+		{
+			var arr = n.ToByteArray();
+			var exponent = arr.Length;
+			if (exponent>1 && arr[exponent-1]==0 && arr[exponent-2]==128 ) 
+				exponent--;
+			return (uint)exponent;
+		}
+
 	  // BigToCompact converts a whole number N to a compact representation using
 	  // an unsigned 32-bit number.  The compact representation only provides 23 bits
 	  // of precision, so values larger than (2^23 - 1) only encode the most
@@ -255,7 +264,7 @@ namespace PeercoinUtils.Crypto
 	    // mantissa = mantissa / 256^(exponent-3)
 	    UInt32 mantissa;  
 	 
-	    UInt32 exponent = Convert.ToUInt32((n.ToByteArray()).Length);
+	    UInt32 exponent = GetExponent(n);
 	
 	    if (exponent <= 3) 
 	    {
