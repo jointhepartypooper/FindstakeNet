@@ -53,3 +53,5 @@ Dependencies for developers:
  * SharpDevelop 5.1.0.5216 downloadeded from https://www.techspot.com/downloads/7214-sharpdevelop.html
  * optional: LiteDB Studio https://github.com/mbdavid/LiteDB.Studio
   
+Or skip that and use NET 5 + Visual Code!!!!!!!!
+see folder FindstakeNet5
