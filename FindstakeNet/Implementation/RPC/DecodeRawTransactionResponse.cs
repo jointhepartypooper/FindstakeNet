@@ -40,7 +40,7 @@ namespace FindstakeNet.Implementation.RPC
 	{
 		public string txid;
 		public int version;
-		public int time;			
+		public int? time;			
 		public int locktime;
 		public int size;
 		public int vsize;

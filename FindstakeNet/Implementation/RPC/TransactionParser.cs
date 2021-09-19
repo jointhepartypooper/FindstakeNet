@@ -29,7 +29,7 @@ namespace FindstakeNet.Implementation.RPC
 		}
 		
 		
-		public void Parse(uint height, List<string> txIds)
+		public void Parse(uint height, List<string> txIds, uint blocktime)
 		{
 			var sizeVarintTx = Mint.GetSizeVarInt((long)(txIds.Count));			
 			var offset = PeercoinConstants.BlockHeaderSize + sizeVarintTx;
@@ -40,7 +40,7 @@ namespace FindstakeNet.Implementation.RPC
 			    var txraw = client.DecodeRawTransaction(tx.hex);		 
 				var rawsize = tx.hex.Length / 2; // 2 char is 1 byte
 			           		
-				StoreTxState(height, txraw, tx, (uint)index, offset, (uint)rawsize);
+				StoreTxState(blocktime, height, txraw, tx, (uint)index, offset, (uint)rawsize);
  
 				DeleteSpentFromStore(txraw);
  
@@ -106,16 +106,20 @@ namespace FindstakeNet.Implementation.RPC
 		}
 				
 		
-		private void StoreTxState(uint height, DecodeRawTransactionResponse txraw, RawTransactionResponse tx, 
+		private void StoreTxState(uint blocktime, uint height, DecodeRawTransactionResponse txraw, RawTransactionResponse tx, 
 		                          uint index, long offset, uint rawsize)
 		{
+			var time = blocktime < PeercoinConstants.ProtocolV10SwitchTime && txraw.time.HasValue
+				? (uint)txraw.time.Value
+				: blocktime;
+
 			var state = new TxState { 
 				hash = txraw.txid,
              	height = height,			                                 	
              	offset = (uint)offset,
 				position = index,					
 				size = rawsize,
-				time = (uint)txraw.time
+				time = time
 			};
 			
 			transactionRepository.SetTxState(state);

@@ -42,7 +42,7 @@ namespace FindstakeNet.Implementation.RPC
 						
 			if (block.nTx > 0)
 			{
-				transactionParser.Parse((uint)block.height, block.tx.ToList());
+				transactionParser.Parse((uint)block.height, block.tx.ToList(), (uint)block.time);
 			}
 			
 			if (!parsedHash.ContainsKey(hash)) 
