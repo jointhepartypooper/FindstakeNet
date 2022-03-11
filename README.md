@@ -11,15 +11,11 @@ Most cryptocoin mining requires specialized hardware, but Peercoin minting can b
 
 With FindStakeNet, you can find out in advance when your coin will mint to let you know to unlock your wallet just before it will find a stake and earn more coins. 
 
-
-
 #### Screenshot:
-![Alt text](https://i.imgur.com/2a70f6k.png "FindstakeNetJS")
 ![Alt text](https://i.imgur.com/elyOpLM.png "peercoind command listunspent")
 
 How to use
 ----------
-Start up Peercoin with an wallet and a configured peercoin.conf. No unlocking required.
 
 Enable txindex=1 in your peercoin.conf (You'll need to rebuild the database as the transaction index is normally not maintained, start using -reindex to do so)
 
@@ -33,25 +29,17 @@ rpcpassword=change_this_to_a_long_random_password
 rpcport=8332
 ```
 
-start application in ".\FindstakeNet\bin\Release\FindstakeNet.exe"
-
-go to Settings and set the rpcuser en rpcpassword
-
-Connect
-
-Load either a json file from a listunspent command (recommended), or load from some wallet
-
-press Start
-
-Eport to csv when done
-
 Dependencies for usage:
-.NET Framework 4.5.2 https://dotnet.microsoft.com/download/dotnet-framework/net452 
+.NET 6 runtime
 
 Dependencies for developers:
-------------
- * SharpDevelop 5.1.0.5216 downloadeded from https://www.techspot.com/downloads/7214-sharpdevelop.html
- * optional: LiteDB Studio https://github.com/mbdavid/LiteDB.Studio
-  
-Or skip that and use NET 5 + Visual Code!!!!!!!!
-see folder FindstakeNet5
+NET 6 + Visual Code!!!!!!!!
+see folder FindstakeNet6
+
+How to compile app:
+dotnet publish FindstakeNet.csproj -c Release --runtime linux-x64 --no-self-contained
+
+examples:
+./FindstakeNet -u IamGroot -w thisisabigpasswwwwword -a PTNSKANTVh6mLuCbAWTmKDZeDedddcGeZZ -s 1635768000 -m 2592000 -l 1830080
+
+tip: spend some time reading Options.cs 
