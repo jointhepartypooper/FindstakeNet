@@ -4,9 +4,18 @@ namespace FindstakeNet
     public class PossibleStake
     {
         /// <summary>
-        /// format id: to{{hash}}_{{vout}}		e.g.:to4044279f77475566da7c94a2e96a3bf1796f02a39f96e42e4b1a48cc59fdbf23_1
+        /// format id: to{{Uxto}}_{{vout}}		e.g.:to4044279f77475566da7c94a2e96a3bf1796f02a39f96e42e4b1a48cc59fdbf23_1
         /// </summary>
         public string ID { get; set; }
+        /// <summary>
+        /// e.g.: 4044279f77475566da7c94a2e96a3bf1796f02a39f96e42e4b1a48cc59fdbf23
+        /// </summary>
+        public string Uxto { get; set; }
+
+        /// <summary>
+        /// e.g.: 1
+        /// </summary>
+        public string Vout { get; set; }
 
         /// <summary>
         /// Peercoin address
@@ -39,6 +48,8 @@ namespace FindstakeNet
             uint prevTxTime, uint prevTxOutIndex)
         {
             this.ID = id;
+            this.Uxto =  id.Substring(2, 64);
+            this.Vout = id.Substring(67);
             this.Address = address;
             this.StakeDate = timestamp;
             this.MaxDifficulty = minimumDifficulty;

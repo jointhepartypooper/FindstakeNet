@@ -27,20 +27,20 @@ namespace FindstakeNet
             _blockRepository = new BlockRepository();
             _transactionRepository = new TransactionRepository(_blockRepository);
  
-            Parser.Default
-                .ParseArguments<Options>(args)
-                .WithParsed<Options>(Findstake);
-
-            // Findstake(new Options
-            // {
-            //     Password = "IamGroot",
-            //     User = "thisisabigpasswwwwword",
-            //     Port = 8332,
-            //     Address = "PTNSKANTVh6mLuCbAWTmKDZeDedddcGeZZ",
-            //     ProtocolV10SwitchTime= 1635768000,
-            //     StakeMinAge = 2592000,
-            //     Findstakelimit= 1830080,
-            // });
+            Parser.Default 
+                .ParseArguments<Options>(args) 
+                .WithParsed<Options>(Findstake); 
+ 
+            // Findstake(new Options 
+            // { 
+            //     Password = "IamGroot", 
+            //     User = "thisisabigpasswwwwword", 
+            //     Port = 8332, 
+            //     Address = "PTNSKANTVh6mLuCbAWTmKDZeDedddcGeZZ", 
+            //     ProtocolV10SwitchTime= 1635768000, 
+            //     StakeMinAge = 2592000, 
+            //     Findstakelimit= 1830080, 
+            // }); 
         }
 
         public static void Findstake(Options o)
@@ -121,6 +121,11 @@ namespace FindstakeNet
                 })
                 .ToList();
             
+            if (unspents.Count == 0)
+            {
+                ExitWithJson("No unspents to look for ", new List<PossibleStake>());
+            }
+
             await FindStakes(parser, unspents);
         }
 
@@ -204,7 +209,11 @@ namespace FindstakeNet
                                 Id = template.Id,
                                 OfAddress = template.OfAddress,
                                 minimumDifficulty = result.minimumDifficulty,
-                                FutureTimestamp = timestamp
+                                FutureTimestamp = timestamp,
+                                StakeModifier = result.StakeModifier,
+                                BlockFromTime = result.BlockFromTime,
+                                PrevTxOffset = result.PrevTxOffset,
+                                PrevTxTime = result.PrevTxTime
                             });
                             resultsStakes = EnrichWithTemplateData(resultsStakes, templates, results);
                             //ExportResults(resultsStakes, results);
@@ -229,6 +238,9 @@ namespace FindstakeNet
 
 
             Console.WriteLine(strJson);
+            string fileName = Path.Combine(Directory.GetCurrentDirectory(), "findstakes.json");
+
+            File.WriteAllText(fileName, strJson);
         }
 
         static List<PossibleStake> EnrichWithTemplateData(List<PossibleStake> resultsStakes, List<MintTemplate> templates, List<CheckStakeResult> results)
