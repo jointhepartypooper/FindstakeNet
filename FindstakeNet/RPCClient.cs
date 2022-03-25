@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Headers;
 using System.Text;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 // ReSharper disable InconsistentNaming
 
 namespace FindstakeNet
@@ -12,11 +13,20 @@ namespace FindstakeNet
 		protected string user;
 		protected string password;
 
+		private readonly HttpClient Client;
+		
 		public RPCClient(string uri, string user, string password)
 		{
 			this.uri = new Uri(uri);
 			this.user = user;
 			this.password = password;
+			this.Client = new HttpClient
+            {
+                BaseAddress = this.uri
+			};
+            var auth = this.user + ":" + this.password;
+            auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(auth), Base64FormattingOptions.None);
+            this.Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", auth);
 		}
 		
 		public async Task<bool> CheckConnection()
@@ -72,22 +82,29 @@ namespace FindstakeNet
 			return await RpcCall<string>(new RPCRequest("getblockhash", new Object[] { index }));
 		}
 		 
+		public async Task<string> CreateRawCoinStakeTransaction(IReadOnlyList<RawTxStakeInputs> inputs, IReadOnlyList<RawTxStakeOutput> outputs, long timestamp)
+		{
+			var param1 = JsonConvert.SerializeObject(inputs);
+
+			var param2 = new JArray(); 
+            param2.Add(JObject.FromObject( new { coinstake = 0 }));
+
+			foreach (var output in outputs)
+			{
+				var jobj = new JObject();
+				jobj.Add(output.Address, new JValue(output.Vout));
+				param2.Add(jobj);
+			}
+
+			return await RpcCall<string>(new RPCRequest("createrawtransaction", new Object[] { param1, param2.ToString(Formatting.None), 0, timestamp }));
+		}
 
         public async Task<T> RpcCall<T>(RPCRequest rpcRequest)
         {
-            var auth = this.user + ":" + this.password;
-            auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(auth), Base64FormattingOptions.None);
+			var test = JsonConvert.SerializeObject(rpcRequest);
 
-            var client = new HttpClient
-            {
-                BaseAddress = uri
-			};
-
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", auth);
-			
-
-			using var content = new StringContent(JsonConvert.SerializeObject(rpcRequest), Encoding.UTF8, "application/json-rpc");
-            var result = await client.PostAsync(uri, content);
+			using var content = new StringContent(JsonConvert.SerializeObject(rpcRequest), Encoding.UTF8, "text/plain");
+            var result = await this.Client.PostAsync(uri, content);
 
             if (!result.IsSuccessStatusCode)
             {
@@ -252,8 +269,8 @@ namespace FindstakeNet
 	{
 		public string txid;
 		public int version;
-		public int? time;
-		public int locktime;
+		public long? time;
+		public long locktime;
 		public int size;
 		public int vsize;
 
@@ -287,3 +304,24 @@ namespace FindstakeNet
 	}
 #pragma warning restore CS8618
 }
+
+public class RawTxStakeInputs
+{
+	public string txid { get; set; } = null!;
+	public int vout { get; set; }
+
+	public string redeemScript { get; set; } = "532102633a97eab667d165b28b19ad0848cc4f3f3e06e6b19b15cdc910d4b13f4e611f21027260ccc4dba64b04c2c07bd02da5257058ad464857919789ad9c983025fd2cba2102b813e6335216f3ae8547d283f3ab600d08c1c444f5d34fa38cfd941d939001422103131f4fb6fdc603ad3859c2c5b3f246f1ee3ba5391600e960b9be4c59f609b3dd2103b12c1b22ebbdf8e7b1c19db701484fd6fdfb63e4b117800a6838c6eb0f0e881b55ae";
+}
+
+public class RawTxStakeOutput
+{
+	public string Address { get; set; }
+	public double Vout { get; set; } = 0;
+
+	public RawTxStakeOutput(string address, double vout)
+	{
+		Address = address;
+		Vout = Math.Round(vout, 6, MidpointRounding.ToZero);
+	}
+}
+

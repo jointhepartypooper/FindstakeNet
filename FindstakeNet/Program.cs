@@ -27,20 +27,23 @@ namespace FindstakeNet
             _blockRepository = new BlockRepository();
             _transactionRepository = new TransactionRepository(_blockRepository);
  
-            Parser.Default 
-                .ParseArguments<Options>(args) 
-                .WithParsed<Options>(Findstake); 
+            // Parser.Default 
+            //     .ParseArguments<Options>(args) 
+            //     .WithParsed<Options>(Findstake); 
+
+ //lets test
  
-            // Findstake(new Options 
-            // { 
-            //     Password = "IamGroot", 
-            //     User = "thisisabigpasswwwwword", 
-            //     Port = 8332, 
-            //     Address = "PTNSKANTVh6mLuCbAWTmKDZeDedddcGeZZ", 
-            //     ProtocolV10SwitchTime= 1635768000, 
-            //     StakeMinAge = 2592000, 
-            //     Findstakelimit= 1830080, 
-            // }); 
+            Findstake(new Options 
+            { 
+            //     Password = "IamGroot",  
+            //     User = "thisisabigpasswwwwword",  
+                Port = 8332, 
+                //Address = "PTNSKANTVh6mLuCbAWTmKDZeDedddcGeZZ", 
+                ProtocolV10SwitchTime= 1635768000, 
+                StakeMinAge = 2592000, 
+                Findstakelimit= 1830080, 
+                Test = true
+            }); 
         }
 
         public static void Findstake(Options o)
@@ -62,6 +65,19 @@ namespace FindstakeNet
             else if (o.Test)
             {
                 var _ = new TestMint();
+                var raw = _rpcclient.CreateRawCoinStakeTransaction(new List<RawTxStakeInputs>{
+                    new RawTxStakeInputs { txid = "13d55957137169ea5367341aeef82802014e3c527f18415e0fa26d1fa625b3e9" }
+                }, new List<RawTxStakeOutput>{
+                    new RawTxStakeOutput("PACKERrvBkmkPSNNnDsPepbeT72hgwfztz", 0),
+                    new RawTxStakeOutput("p92W3t7YkKfQEPDb7cG9jQ6iMh7cpKLvwK", 2022.0)
+                }, 1647877833)
+                .GetAwaiter()
+                .GetResult();
+
+                if (raw != "01000000c99e386201e9b325a61f6da20f5e41187f523c4e010228f8ee1a346753ea6971135759d51300000000ad532102633a97eab667d165b28b19ad0848cc4f3f3e06e6b19b15cdc910d4b13f4e611f21027260ccc4dba64b04c2c07bd02da5257058ad464857919789ad9c983025fd2cba2102b813e6335216f3ae8547d283f3ab600d08c1c444f5d34fa38cfd941d939001422103131f4fb6fdc603ad3859c2c5b3f246f1ee3ba5391600e960b9be4c59f609b3dd2103b12c1b22ebbdf8e7b1c19db701484fd6fdfb63e4b117800a6838c6eb0f0e881b55aeffffffff0300000000000000000000000000000000001976a914119d6d38c00856de795ae3e6975705672ce0f5e288ac804585780000000017a91426308eea0cfcbe5bc51a5d28f297b92842db43578700000000")
+                {
+                    ExitWithJson("expected an different rawtransaction ", new List<PossibleStake>());
+                }
             }
             else
             {
