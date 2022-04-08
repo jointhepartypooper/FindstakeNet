@@ -86,6 +86,13 @@
 			}
 		}
 
+		public OutputState GetOutput(string hash, uint vout)
+		{
+			lock (listOutputslock)
+			{
+				return outputs.First(x => x.hash == hash && x.idx == vout);
+			}
+		}
 
 		private List<OutputState> GetOutputs(List<AddressTxoState> addressTxoStates)
 		{

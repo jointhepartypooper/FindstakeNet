@@ -31,6 +31,9 @@ namespace FindstakeNet
         [Option('l', "findstakelimit", Required = false, Default= 1830080, HelpText = "StakeMinAge - 761920")]
         public long Findstakelimit { get; set; }
 
+        [Option('r', "rawcoinstakesigners", Required = false, HelpText = "comma separated peercoin addresses used for signing")]
+        public string RawCoinstakeAddresses { get; set; }
+
         [Option('t', "test", Required = false, HelpText = "run build-in tests")]
         public bool Test { get; set; }
     }

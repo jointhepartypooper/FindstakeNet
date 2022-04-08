@@ -84,8 +84,7 @@ namespace FindstakeNet
 		 
 		public async Task<string> CreateRawCoinStakeTransaction(IReadOnlyList<RawTxStakeInputs> inputs, IReadOnlyList<RawTxStakeOutput> outputs, long timestamp)
 		{
-			var param1 = JsonConvert.SerializeObject(inputs);
-
+			var param1 = inputs;
 			var param2 = new JArray(); 
             param2.Add(JObject.FromObject( new { coinstake = 0 }));
 
@@ -96,12 +95,12 @@ namespace FindstakeNet
 				param2.Add(jobj);
 			}
 
-			return await RpcCall<string>(new RPCRequest("createrawtransaction", new Object[] { param1, param2.ToString(Formatting.None), 0, timestamp }));
+			return await RpcCall<string>(new RPCRequest("createrawtransaction", new Object[] { param1, param2, 0, timestamp }));
 		}
 
         public async Task<T> RpcCall<T>(RPCRequest rpcRequest)
         {
-			var test = JsonConvert.SerializeObject(rpcRequest);
+			//var test = JsonConvert.SerializeObject(rpcRequest);
 
 			using var content = new StringContent(JsonConvert.SerializeObject(rpcRequest), Encoding.UTF8, "text/plain");
             var result = await this.Client.PostAsync(uri, content);
@@ -119,7 +118,7 @@ namespace FindstakeNet
 
             var rpcResponse = JsonConvert.DeserializeObject<RPCResponse<T>>(returnValue);
 
-            if (rpcResponse==null)
+            if (rpcResponse == null)
             {
                 throw new RPCException(new RPCError() { code = 1044, message = "rpcResponse is null" });
             }

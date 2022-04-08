@@ -1,5 +1,6 @@
 ﻿using CommandLine;
 using Newtonsoft.Json;
+using System.Linq;
 
 namespace FindstakeNet
 {
@@ -21,29 +22,30 @@ namespace FindstakeNet
         private static decimal PosDifficulty { get; set; }
         private static uint Findstakelimit { get; set; }
         private static uint StakeMinAge { get; set; }
+        private static List<string> SignAddresses { get; set; } = new List<string>();
 
         public static void Main(string[] args)
         {
             _blockRepository = new BlockRepository();
             _transactionRepository = new TransactionRepository(_blockRepository);
  
-            // Parser.Default 
-            //     .ParseArguments<Options>(args) 
-            //     .WithParsed<Options>(Findstake); 
+            Parser.Default 
+                .ParseArguments<Options>(args) 
+                .WithParsed<Options>(Findstake); 
 
- //lets test
- 
-            Findstake(new Options 
-            { 
-            //     Password = "IamGroot",  
-            //     User = "thisisabigpasswwwwword",  
-                Port = 8332, 
-                //Address = "PTNSKANTVh6mLuCbAWTmKDZeDedddcGeZZ", 
-                ProtocolV10SwitchTime= 1635768000, 
-                StakeMinAge = 2592000, 
-                Findstakelimit= 1830080, 
-                Test = true
-            }); 
+            //lets test: 
+            // Findstake(new Options 
+            // { 
+            //     Password = "IamGroot",   
+            //     User = "thisisabigpasswwwwword",   
+            //     Port = 8332, 
+            //     Address = "PTNSKANTVh6mLuCbAWTmKDZeDedddcGeZZ", 
+            //     ProtocolV10SwitchTime= 1635768000, 
+            //     StakeMinAge = 2592000, 
+            //     Findstakelimit= 1830080, 
+            //     RawCoinstakeAddresses = "PACKERrvBkmkPSNNnDsPepbeT72hgwfztz"
+            //     //Test = true
+            // }); 
         }
 
         public static void Findstake(Options o)
@@ -53,6 +55,11 @@ namespace FindstakeNet
 
             Findstakelimit = (uint) o.Findstakelimit;
             StakeMinAge = (uint) o.StakeMinAge;
+
+            if (!string.IsNullOrEmpty(o.RawCoinstakeAddresses))
+            {
+                SignAddresses = o.RawCoinstakeAddresses.Split(',').Select(a => a.Trim()).ToList();
+            }
 
             if (!string.IsNullOrEmpty(o.Address))
             {
@@ -66,7 +73,7 @@ namespace FindstakeNet
             {
                 var _ = new TestMint();
                 var raw = _rpcclient.CreateRawCoinStakeTransaction(new List<RawTxStakeInputs>{
-                    new RawTxStakeInputs { txid = "13d55957137169ea5367341aeef82802014e3c527f18415e0fa26d1fa625b3e9" }
+                    new RawTxStakeInputs { txid = "13d55957137169ea5367341aeef82802014e3c527f18415e0fa26d1fa625b3e9", vout = 0 }
                 }, new List<RawTxStakeOutput>{
                     new RawTxStakeOutput("PACKERrvBkmkPSNNnDsPepbeT72hgwfztz", 0),
                     new RawTxStakeOutput("p92W3t7YkKfQEPDb7cG9jQ6iMh7cpKLvwK", 2022.0)
@@ -136,7 +143,7 @@ namespace FindstakeNet
                     address = unspent.address
                 })
                 .ToList();
-            
+              
             if (unspents.Count == 0)
             {
                 ExitWithJson("No unspents to look for ", new List<PossibleStake>());
@@ -152,9 +159,14 @@ namespace FindstakeNet
                 unspent.blockhash = await parser.GetBlockHash(unspent.txid);
                 unspent.blockheight = await parser.Parse(unspent.blockhash);
                 await parser.Parse(unspent.blockhash);
+                var block =_blockRepository!.GetBlockState(unspent.blockheight);
+                unspent.blocktime = block!.bt;
+                var output = _transactionRepository!.GetOutput(unspent.txid, unspent.vout);
+                unspent.units = output!.units;
             }
 
-            var minMarginDifficulty = 0.25f;
+            // set negative if expecting a slight increase in POS diff in future:
+            var minMarginDifficulty = -0.25f;
             var templates = new List<MintTemplate>();
 
             var addresses = unspents.Select(un => un.address)
@@ -189,12 +201,12 @@ namespace FindstakeNet
                 await parser.Parse(i);
             }
 
-            var futurestakes = StartSearch(templates);
+            var futurestakes = await StartSearch(templates, unspents);
 
             ExitWithJson(null, futurestakes);
         }
 
-        public static IReadOnlyList<PossibleStake> StartSearch(List<MintTemplate> templates)
+        public static async Task<IReadOnlyList<PossibleStake>> StartSearch(List<MintTemplate> templates, List<UnspentTransactionData> unspents)
         {
             var lastblock = _blockRepository!.GetBlockState(BlockHeight - 6); //not the very last
             var lastblocktime = lastblock!.bt;
@@ -231,7 +243,8 @@ namespace FindstakeNet
                                 PrevTxOffset = result.PrevTxOffset,
                                 PrevTxTime = result.PrevTxTime
                             });
-                            resultsStakes = EnrichWithTemplateData(resultsStakes, templates, results);
+
+                            resultsStakes = await EnrichWithTemplateData(resultsStakes, templates, result, unspents);
                             //ExportResults(resultsStakes, results);
                             break;
                     }
@@ -259,26 +272,33 @@ namespace FindstakeNet
             File.WriteAllText(fileName, strJson);
         }
 
-        static List<PossibleStake> EnrichWithTemplateData(List<PossibleStake> resultsStakes, List<MintTemplate> templates, List<CheckStakeResult> results)
+        static async Task<List<PossibleStake>> EnrichWithTemplateData(List<PossibleStake> resultsStakes, List<MintTemplate> templates, 
+            CheckStakeResult result, List<UnspentTransactionData> unspents)
         {
             var possibleStakes = resultsStakes;
+            var template = templates.FirstOrDefault(tp => tp.Id == result.Id);
 
-            possibleStakes.AddRange(from result in results
-                let template = templates.FirstOrDefault(tp => tp.Id == result.Id)
-                where template != null && result.FutureTimestamp > 0
-                select new PossibleStake(result.Id,
-                    template.OfAddress,
-                    ConvertFromUnixTimestamp(result.FutureTimestamp),
-                    result.minimumDifficulty,
-                    result.FutureTimestamp,
-                    result.StakeModifier,
-                    result.BlockFromTime,
-                    result.PrevTxOffset,
-                    result.PrevTxTime,
-                    result.PrevTxOutIndex));
+            if (template != null && 
+                result.FutureTimestamp > 0 && 
+                !possibleStakes.Any(ps => ps.ID == result.Id && ps.FutureTimestamp == result.FutureTimestamp))
+            {
+                var txid = result.Id!.Substring(2, 64);
+                var vout = result.Id.Substring(67);
+                var unspent = unspents.First(tp => tp.txid == txid && tp.vout.ToString() == vout);
+                var possibleStake = new PossibleStake(unspent, result);
 
+                var signers = SignAddresses;
+
+                possibleStake.RawTransaction = await CreateRawTransactionHash(signers, possibleStake.Address, possibleStake.Uxto,
+                        possibleStake.Vout, possibleStake.FutureTimestamp,
+                        possibleStake.NewValueAtFutureTimestamp);
+
+                possibleStakes.Add(possibleStake);
+            }
+         
             return possibleStakes;
         }
+ 
 
         private static uint ConvertToUnixTimestamp(DateTime datetimestamp)
         {
@@ -290,6 +310,17 @@ namespace FindstakeNet
         {
             var origin = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
             return origin.AddSeconds(timestamp).ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss");
+        }
+
+        private static async Task<string> CreateRawTransactionHash(List<string> signers, string address, string txid, int vout, long futureTimestamp, double futureOutput)
+        {
+            var inputs = new List<RawTxStakeInputs>{ new RawTxStakeInputs { txid = txid, vout = vout } };
+
+            var outputs = signers!.Select(s => new RawTxStakeOutput(s, 0)).ToList();
+
+            outputs.Add(new RawTxStakeOutput(address, futureOutput));
+
+           return await _rpcclient!.CreateRawCoinStakeTransaction(inputs, outputs, futureTimestamp);
         }
     }
 }

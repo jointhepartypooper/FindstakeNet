@@ -8,5 +8,9 @@ namespace FindstakeNet
         public string address = null!;
         public uint blockheight;
         public string? blockhash;
+
+        public uint blocktime;
+
+        public ulong units;
     }
 }

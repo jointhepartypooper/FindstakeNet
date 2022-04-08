@@ -15,7 +15,7 @@ namespace FindstakeNet
         /// <summary>
         /// e.g.: 1
         /// </summary>
-        public string Vout { get; set; }
+        public int Vout { get; set; }
 
         /// <summary>
         /// Peercoin address
@@ -32,33 +32,63 @@ namespace FindstakeNet
         /// </summary>
         public float MaxDifficulty { get; set; }
 
-        public ulong StakeModifier;
-        public uint BlockFromTime;
-        public uint PrevTxOffset;
-        public uint PrevTxTime;
-        public uint PrevTxOutIndex;
+        public ulong StakeModifier { get; set; }
+        public uint BlockFromTime { get; set; }
+        public uint PrevTxOffset { get; set; }
+        public uint PrevTxTime { get; set; }
+        public uint PrevTxOutIndex { get; set; }
 
         /// <summary>
         /// unixtime in seconds
         /// </summary>
-        public uint FutureTimestamp;
+        public uint FutureTimestamp { get; set; }
 
-        public PossibleStake(string id, string address, string timestamp, float minimumDifficulty,
-            uint txTime, ulong stakeModifier, uint blockFromTime, uint prevTxOffset,
-            uint prevTxTime, uint prevTxOutIndex)
+        /// <summary>
+        /// New output value at mint time
+        /// </summary>
+        public double NewValueAtFutureTimestamp { get; set; }
+
+        public string RawTransaction { get; set; } = "";
+
+        public PossibleStake(UnspentTransactionData unspent, CheckStakeResult result)
         {
-            this.ID = id;
-            this.Uxto =  id.Substring(2, 64);
-            this.Vout = id.Substring(67);
-            this.Address = address;
-            this.StakeDate = timestamp;
-            this.MaxDifficulty = minimumDifficulty;
-            this.StakeModifier = stakeModifier;
-            this.BlockFromTime = blockFromTime;
-            this.PrevTxOffset = prevTxOffset;
-            this.PrevTxTime = prevTxTime;
-            this.PrevTxOutIndex = prevTxOutIndex;
-            this.FutureTimestamp = txTime;
+            this.ID = result.Id;
+            this.Uxto =  result.Id.Substring(2, 64);
+            this.Vout = int.Parse(result.Id.Substring(67));
+            this.Address = result.OfAddress;
+            this.StakeDate = ConvertFromUnixTimestamp(result.FutureTimestamp);
+            this.MaxDifficulty = result.minimumDifficulty;
+            this.StakeModifier = result.StakeModifier;
+            this.BlockFromTime = result.BlockFromTime;
+            this.PrevTxOffset = result.PrevTxOffset;
+            this.PrevTxTime = result.PrevTxTime;
+            this.PrevTxOutIndex = result.PrevTxOutIndex;
+            this.FutureTimestamp = result.FutureTimestamp;
+            this.NewValueAtFutureTimestamp = CalcNewUnits(result.BlockFromTime, result.FutureTimestamp, unspent.units);
+        }     
+
+        //todo move calculation elsewhere
+        private double CalcNewUnits(uint blocktime, uint futureTimestamp, ulong units)
+        {
+            /*
+            Equation at 3% plus a basis 1.2 peercoin:
+            A = P(1 + 0.03*t) + 1.2      
+            */   
+            var MaxedAtSecondsInYear = 365 * 24 * 60 * 60;
+            var time = futureTimestamp - blocktime;
+            var seconds = Math.Min(time, MaxedAtSecondsInYear);
+            var fractionyears = (1.0* time) / (1.0 * MaxedAtSecondsInYear);
+            
+            // just floor the double:
+            var newUnits = Convert.ToUInt64((units * (1 + (0.03 * fractionyears))) + (1.2 * 1000000));
+
+            return 0.000001 * newUnits;
+        }
+
+        private static string ConvertFromUnixTimestamp(long timestamp)
+        {
+            var origin = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+            return origin.AddSeconds(timestamp).ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss");
         }
     }
 }
