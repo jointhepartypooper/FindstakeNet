@@ -22,9 +22,6 @@ namespace FindstakeNet
         [Option('v', "verbose", Required = false, HelpText = "Set output to verbose messages.")]
         public bool Verbose { get; set; }
 
-        [Option('s', "protocolv10switchtime", Required = false, Default= 1635768000, HelpText = "Set switchtime protocol v10. Default is Mon  1 Nov 12:00:00 UTC 2021")]
-        public long ProtocolV10SwitchTime { get; set; }
-
         [Option('m', "stakeminage", Required = false, Default= 2592000, HelpText = "time to wait after stake")]
         public long StakeMinAge { get; set; }
 

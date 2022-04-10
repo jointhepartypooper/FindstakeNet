@@ -9,12 +9,9 @@ namespace FindstakeNet
 		private readonly BlockRepository blockRepository;
 		private readonly Dictionary<string, uint> parsedHash;
 		private readonly Dictionary<uint, bool> parsedHeight;
-        private readonly long protocolV10SwitchTime;
 
-		public BlockChainParser(RPCClient client, BlockRepository blockRepository, TransactionRepository transactionRepository,
-            long protocolV10SwitchTime)
+		public BlockChainParser(RPCClient client, BlockRepository blockRepository, TransactionRepository transactionRepository)
 		{
-			this.protocolV10SwitchTime=protocolV10SwitchTime;
 			this.client = client;
 			this.transactionRepository = transactionRepository;
 			this.blockRepository = blockRepository;
@@ -113,8 +110,8 @@ namespace FindstakeNet
 		private void StoreTxState(uint blocktime, uint height, DecodeRawTransactionResponse txraw,
 			uint index, long offset, uint rawsize)
         {
-            var time = blocktime < protocolV10SwitchTime && txraw.time.HasValue
-                ? (uint) txraw.time.Value
+            var time = txraw.time.HasValue
+			    ? (uint) txraw.time.Value
                 : blocktime;
 
 			var state = new TxState

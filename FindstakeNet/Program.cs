@@ -29,23 +29,22 @@ namespace FindstakeNet
             _blockRepository = new BlockRepository();
             _transactionRepository = new TransactionRepository(_blockRepository);
  
-            Parser.Default 
-                .ParseArguments<Options>(args) 
-                .WithParsed<Options>(Findstake); 
+            // Parser.Default 
+            //     .ParseArguments<Options>(args) 
+            //     .WithParsed<Options>(Findstake); 
 
-            //lets test: 
-            // Findstake(new Options 
-            // { 
-            //     Password = "IamGroot",   
-            //     User = "thisisabigpasswwwwword",   
-            //     Port = 8332, 
-            //     Address = "PTNSKANTVh6mLuCbAWTmKDZeDedddcGeZZ", 
-            //     ProtocolV10SwitchTime= 1635768000, 
-            //     StakeMinAge = 2592000, 
-            //     Findstakelimit= 1830080, 
-            //     RawCoinstakeAddresses = "PACKERrvBkmkPSNNnDsPepbeT72hgwfztz"
-            //     //Test = true
-            // }); 
+           // lets test: 
+            Findstake(new Options 
+            { 
+                Password = "IamGroot",   
+                User = "thisisabigpasswwwwword",   
+                Port = 9002, 
+                Address = "2N947RynbLu8xxXJVrTkXr77jwo2UDpnjbT", 
+                StakeMinAge = 2592000, 
+                Findstakelimit= 1830080, 
+                RawCoinstakeAddresses = "PACKERrvBkmkPSNNnDsPepbeT72hgwfztz",
+                //Test = true
+            }); 
         }
 
         public static void Findstake(Options o)
@@ -63,11 +62,11 @@ namespace FindstakeNet
 
             if (!string.IsNullOrEmpty(o.Address))
             {
-                FindstakeByAddress(o.Address, o.ProtocolV10SwitchTime).GetAwaiter().GetResult();
+                FindstakeByAddress(o.Address).GetAwaiter().GetResult();
             }
             else if (!string.IsNullOrEmpty(o.FileListUnspent))
             {
-                FindstakeByListUnspent(o.FileListUnspent!, o.ProtocolV10SwitchTime).GetAwaiter().GetResult();
+                FindstakeByListUnspent(o.FileListUnspent!).GetAwaiter().GetResult();
             }
             else if (o.Test)
             {
@@ -92,7 +91,7 @@ namespace FindstakeNet
             }
         }
 
-        public static async Task FindstakeByListUnspent(string file,long protocolV10SwitchTime)
+        public static async Task FindstakeByListUnspent(string file)
         {
             BlockHeight = await _rpcclient!.GetBlockCount();
             PosDifficulty = (await _rpcclient.GetDifficulty()).pos;
@@ -102,8 +101,7 @@ namespace FindstakeNet
                 return;
             }
 
-            var parser = new BlockChainParser(_rpcclient, _blockRepository!, _transactionRepository!,
-                protocolV10SwitchTime);
+            var parser = new BlockChainParser(_rpcclient, _blockRepository!, _transactionRepository!);
 
             var listunspents = JsonConvert.DeserializeObject<List<Unspent>>(
                 await File.ReadAllTextAsync(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + file));
@@ -121,7 +119,7 @@ namespace FindstakeNet
         }
 
 
-        public static async Task FindstakeByAddress(string peercoinAddress, long protocolV10SwitchTime)
+        public static async Task FindstakeByAddress(string peercoinAddress)
         {
             BlockHeight = await _rpcclient!.GetBlockCount();
             PosDifficulty = (await _rpcclient.GetDifficulty()).pos;
@@ -131,8 +129,7 @@ namespace FindstakeNet
                 return;
             }
 
-            var parser = new BlockChainParser(_rpcclient, _blockRepository!, _transactionRepository!,
-                protocolV10SwitchTime);
+            var parser = new BlockChainParser(_rpcclient, _blockRepository!, _transactionRepository!);
 
             var unspents = (await _rpcclient.GetUnspents())
                 .Where(unspent=>unspent.address.Equals(peercoinAddress))
@@ -289,9 +286,9 @@ namespace FindstakeNet
 
                 var signers = SignAddresses;
 
-                possibleStake.RawTransaction = await CreateRawTransactionHash(signers, possibleStake.Address, possibleStake.Uxto,
-                        possibleStake.Vout, possibleStake.FutureTimestamp,
-                        possibleStake.NewValueAtFutureTimestamp);
+                // possibleStake.RawTransaction = await CreateRawTransactionHash(signers, possibleStake.Address, possibleStake.Uxto,
+                //         possibleStake.Vout, possibleStake.FutureTimestamp,
+                //         possibleStake.NewValueAtFutureTimestamp);
 
                 possibleStakes.Add(possibleStake);
             }
