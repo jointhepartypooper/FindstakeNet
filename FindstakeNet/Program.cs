@@ -35,13 +35,15 @@ namespace FindstakeNet
 
            // lets test: 
             Findstake(new Options 
-            { 
-                Password = "IamGroot",   
-                User = "thisisabigpasswwwwword",   
+            {    
+                User = "IamGroot",  
+                Password = "thisisabigpasswwwwword",    
                 Port = 9002, 
                 Address = "2N947RynbLu8xxXJVrTkXr77jwo2UDpnjbT", 
-                StakeMinAge = 2592000, 
-                Findstakelimit= 1830080, 
+                // StakeMinAge = 2592000, 
+                StakeMinAge = 86400, 
+                Findstakelimit= 44099, 
+                //Findstakelimit= 1830080, 
                 RawCoinstakeAddresses = "PACKERrvBkmkPSNNnDsPepbeT72hgwfztz",
                 //Test = true
             }); 
@@ -132,7 +134,7 @@ namespace FindstakeNet
             var parser = new BlockChainParser(_rpcclient, _blockRepository!, _transactionRepository!);
 
             var unspents = (await _rpcclient.GetUnspents())
-                .Where(unspent=>unspent.address.Equals(peercoinAddress))
+                .Where(unspent => unspent.address.Equals(peercoinAddress))
                 .Select(unspent => new UnspentTransactionData
                 {
                     txid = unspent.txid,
@@ -163,7 +165,8 @@ namespace FindstakeNet
             }
 
             // set negative if expecting a slight increase in POS diff in future:
-            var minMarginDifficulty = -0.25f;
+            // test reduce the thresthold by half:
+            var minMarginDifficulty = 0.5f * Convert.ToSingle(PosDifficulty); //-0.25f;
             var templates = new List<MintTemplate>();
 
             var addresses = unspents.Select(un => un.address)
@@ -191,6 +194,8 @@ namespace FindstakeNet
             }
 
             //load modifiers:
+            // start with a block way back assuming there are 6 blocks in an hour: 
+            // see also: consensus.nStakeTargetSpacing = 10 * 60; // 10-minute block spacing
             var start = BlockHeight - (6 * 24 * 31) - 10;
             var end = BlockHeight;
             for (var i = start; i < end; i++)
@@ -281,16 +286,19 @@ namespace FindstakeNet
             {
                 var txid = result.Id!.Substring(2, 64);
                 var vout = result.Id.Substring(67);
-                var unspent = unspents.First(tp => tp.txid == txid && tp.vout.ToString() == vout);
-                var possibleStake = new PossibleStake(unspent, result);
+                var unspent = unspents.FirstOrDefault(tp => tp.txid == txid && tp.vout.ToString() == vout);
+                if (unspent != null)
+                {
+                    var possibleStake = new PossibleStake(unspent, result);
 
-                var signers = SignAddresses;
+                    var signers = SignAddresses;
+    await Task.CompletedTask;
+                    // possibleStake.RawTransaction = await CreateRawTransactionHash(signers, possibleStake.Address, possibleStake.Uxto,
+                    //         possibleStake.Vout, possibleStake.FutureTimestamp,
+                    //         possibleStake.NewValueAtFutureTimestamp);
 
-                // possibleStake.RawTransaction = await CreateRawTransactionHash(signers, possibleStake.Address, possibleStake.Uxto,
-                //         possibleStake.Vout, possibleStake.FutureTimestamp,
-                //         possibleStake.NewValueAtFutureTimestamp);
-
-                possibleStakes.Add(possibleStake);
+                    possibleStakes.Add(possibleStake);
+                }
             }
          
             return possibleStakes;
