@@ -100,7 +100,7 @@ namespace FindstakeNet
 
         public async Task<T> RpcCall<T>(RPCRequest rpcRequest)
         {
-			//var test = JsonConvert.SerializeObject(rpcRequest);
+			var test = JsonConvert.SerializeObject(rpcRequest);
 
 			using var content = new StringContent(JsonConvert.SerializeObject(rpcRequest), Encoding.UTF8, "text/plain");
             var result = await this.Client.PostAsync(uri, content);

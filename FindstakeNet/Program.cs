@@ -1,4 +1,4 @@
-﻿using CommandLine;
+﻿﻿using CommandLine;
 using Newtonsoft.Json;
 using System.Linq;
 
@@ -35,10 +35,10 @@ namespace FindstakeNet
 
            // lets test: 
             Findstake(new Options 
-            {    
-                User = "IamGroot",  
-                Password = "thisisabigpasswwwwword",    
-                Port = 9002, 
+            {                                   
+                User = "IamGroot",   
+                Password = "thisisabigpasswwwwword",     
+                Port = 9002,                  
                 Address = "2N947RynbLu8xxXJVrTkXr77jwo2UDpnjbT", 
                 // StakeMinAge = 2592000, 
                 StakeMinAge = 86400, 
@@ -166,7 +166,7 @@ namespace FindstakeNet
 
             // set negative if expecting a slight increase in POS diff in future:
             // test reduce the thresthold by half:
-            var minMarginDifficulty = 0.5f * Convert.ToSingle(PosDifficulty); //-0.25f;
+            var minMarginDifficulty = 0.75f * Convert.ToSingle(PosDifficulty); //-0.25f;
             var templates = new List<MintTemplate>();
 
             var addresses = unspents.Select(un => un.address)
@@ -176,7 +176,8 @@ namespace FindstakeNet
             foreach (var address in addresses)
             {
                 var unspentsbyaddress = _transactionRepository!.GetUnspents(address);
-                unspentsbyaddress.ForEach(unspent => {
+                unspentsbyaddress.ForEach(unspent =>
+                {
                     var mintTemplate = new MintTemplate(
                         unspent.Id,
                         address,
@@ -184,7 +185,7 @@ namespace FindstakeNet
                         unspent.PrevTxOffset,
                         unspent.PrevTxTime,
                         unspent.PrevTxOutIndex,
-                        (uint)unspent.PrevTxOutValue);
+                        (uint) unspent.PrevTxOutValue);
 
                     mintTemplate.SetBitsWithDifficulty(((Convert.ToSingle(PosDifficulty) - minMarginDifficulty)));
 
@@ -203,12 +204,12 @@ namespace FindstakeNet
                 await parser.Parse(i);
             }
 
-            var futurestakes = await StartSearch(templates, unspents);
+            var futurestakes = await StartSearch(templates);
 
             ExitWithJson(null, futurestakes);
         }
 
-        public static async Task<IReadOnlyList<PossibleStake>> StartSearch(List<MintTemplate> templates, List<UnspentTransactionData> unspents)
+        public static async Task<IReadOnlyList<PossibleStake>> StartSearch(List<MintTemplate> templates)
         {
             var lastblock = _blockRepository!.GetBlockState(BlockHeight - 6); //not the very last
             var lastblocktime = lastblock!.bt;
@@ -246,7 +247,7 @@ namespace FindstakeNet
                                 PrevTxTime = result.PrevTxTime
                             });
 
-                            resultsStakes = await EnrichWithTemplateData(resultsStakes, templates, result, unspents);
+                            resultsStakes = await EnrichWithTemplateData(resultsStakes, templates, result, template.PrevTxOutValue);
                             //ExportResults(resultsStakes, results);
                             break;
                     }
@@ -275,7 +276,7 @@ namespace FindstakeNet
         }
 
         static async Task<List<PossibleStake>> EnrichWithTemplateData(List<PossibleStake> resultsStakes, List<MintTemplate> templates, 
-            CheckStakeResult result, List<UnspentTransactionData> unspents)
+            CheckStakeResult result, uint prevTxOutValue)
         {
             var possibleStakes = resultsStakes;
             var template = templates.FirstOrDefault(tp => tp.Id == result.Id);
@@ -286,19 +287,16 @@ namespace FindstakeNet
             {
                 var txid = result.Id!.Substring(2, 64);
                 var vout = result.Id.Substring(67);
-                var unspent = unspents.FirstOrDefault(tp => tp.txid == txid && tp.vout.ToString() == vout);
-                if (unspent != null)
-                {
-                    var possibleStake = new PossibleStake(unspent, result);
 
-                    var signers = SignAddresses;
-    await Task.CompletedTask;
-                    // possibleStake.RawTransaction = await CreateRawTransactionHash(signers, possibleStake.Address, possibleStake.Uxto,
-                    //         possibleStake.Vout, possibleStake.FutureTimestamp,
-                    //         possibleStake.NewValueAtFutureTimestamp);
+                var possibleStake = new PossibleStake(prevTxOutValue, result);
 
-                    possibleStakes.Add(possibleStake);
-                }
+                var signers = SignAddresses;
+                await Task.CompletedTask;
+                // possibleStake.RawTransaction = await CreateRawTransactionHash(signers, possibleStake.Address, possibleStake.Uxto,
+                //         possibleStake.Vout, possibleStake.FutureTimestamp,
+                //         possibleStake.NewValueAtFutureTimestamp);
+
+                possibleStakes.Add(possibleStake);
             }
          
             return possibleStakes;

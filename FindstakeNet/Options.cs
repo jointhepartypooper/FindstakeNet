@@ -22,10 +22,10 @@ namespace FindstakeNet
         [Option('v', "verbose", Required = false, HelpText = "Set output to verbose messages.")]
         public bool Verbose { get; set; }
 
-        [Option('m', "stakeminage", Required = false, Default= 2592000, HelpText = "time to wait after stake")]
+        [Option('m', "stakeminage", Required = false, Default= 2592000, HelpText = "time to wait after stake. 86400 in testnet")]
         public long StakeMinAge { get; set; }
 
-        [Option('l', "findstakelimit", Required = false, Default= 1830080, HelpText = "StakeMinAge - 761920")]
+        [Option('l', "findstakelimit", Required = false, Default= 1830080, HelpText = "StakeMinAge - 761920. 44099 in testnet")]
         public long Findstakelimit { get; set; }
 
         [Option('r', "rawcoinstakesigners", Required = false, HelpText = "comma separated peercoin addresses used for signing")]

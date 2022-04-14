@@ -1,4 +1,4 @@
-﻿// ReSharper disable InconsistentNaming
+﻿﻿// ReSharper disable InconsistentNaming
 namespace FindstakeNet
 {
     public class PossibleStake
@@ -50,7 +50,7 @@ namespace FindstakeNet
 
         public string RawTransaction { get; set; } = "";
 
-        public PossibleStake(UnspentTransactionData unspent, CheckStakeResult result)
+        public PossibleStake(ulong units, CheckStakeResult result)
         {
             this.ID = result.Id;
             this.Uxto =  result.Id.Substring(2, 64);
@@ -64,7 +64,7 @@ namespace FindstakeNet
             this.PrevTxTime = result.PrevTxTime;
             this.PrevTxOutIndex = result.PrevTxOutIndex;
             this.FutureTimestamp = result.FutureTimestamp;
-            this.NewValueAtFutureTimestamp = CalcNewUnits(result.BlockFromTime, result.FutureTimestamp, unspent.units);
+            this.NewValueAtFutureTimestamp = CalcNewUnits(result.BlockFromTime, result.FutureTimestamp, units);
         }     
 
         //todo move calculation elsewhere
@@ -76,8 +76,8 @@ namespace FindstakeNet
             */   
             var MaxedAtSecondsInYear = 365 * 24 * 60 * 60;
             var time = futureTimestamp - blocktime;
-            var seconds = Math.Min(time, MaxedAtSecondsInYear);
-            var fractionyears = (1.0* time) / (1.0 * MaxedAtSecondsInYear);
+            var seconds = Math.Min(time, MaxedAtSecondsInYear); // cap at 1 year max
+            var fractionyears = (seconds) / (1.0 * MaxedAtSecondsInYear);
             
             // just floor the double:
             var newUnits = Convert.ToUInt64((units * (1 + (0.03 * fractionyears))) + (1.2 * 1000000));
