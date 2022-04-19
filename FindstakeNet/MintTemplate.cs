@@ -9,7 +9,7 @@
         public uint PrevTxOffset { get; private set; }
         public uint PrevTxTime { get; private set; }
         public uint PrevTxOutIndex { get; private set; }
-        public uint PrevTxOutValue { get; private set; }
+        public ulong PrevTxOutValue { get; private set; }
 
         public uint? Bits { get; private set; }
 
@@ -19,7 +19,7 @@
             uint prevTxOffset,
             uint prevTxTime,
             uint prevTxOutIndex,
-            uint prevTxOutValue)
+            ulong prevTxOutValue)
         {
             this.Id = id;
             this.OfAddress = address;

@@ -36,8 +36,8 @@ namespace FindstakeNet
            // lets test: 
             Findstake(new Options 
             {                                   
-                User = "IamGroot",    
-                Password = "thisisabigpasswwwwword",       
+                User = "IamGroot",     
+                Password = "thisisabigpasswwwwword",             
                 Port = 9002,                  
                 Address = "2N947RynbLu8xxXJVrTkXr77jwo2UDpnjbT", 
                 // StakeMinAge = 2592000, 
@@ -166,7 +166,7 @@ namespace FindstakeNet
 
             // set negative if expecting a slight increase in POS diff in future:
             // test reduce the thresthold by half:
-            var minMarginDifficulty = 0.75f * Convert.ToSingle(PosDifficulty); //-0.25f;
+            var minMarginDifficulty = 2.25f;
             var templates = new List<MintTemplate>();
 
             var addresses = unspents.Select(un => un.address)
@@ -175,9 +175,12 @@ namespace FindstakeNet
 
             foreach (var address in addresses)
             {
-                var unspentsbyaddress = _transactionRepository!.GetUnspents(address);
+                var unspentsbyaddress = _transactionRepository!.GetUnspents(address)
+                    .Where(unspent => unspents.Any(u => u.txid == unspent.Id!.Substring(2, 64) && u.vout.ToString() == unspent.Id.Substring(67)))
+                    .ToList(); 
+
                 unspentsbyaddress.ForEach(unspent =>
-                {
+                {                    
                     var mintTemplate = new MintTemplate(
                         unspent.Id,
                         address,
@@ -185,14 +188,11 @@ namespace FindstakeNet
                         unspent.PrevTxOffset,
                         unspent.PrevTxTime,
                         unspent.PrevTxOutIndex,
-                        (uint) unspent.PrevTxOutValue);
+                        unspent.PrevTxOutValue);
 
                     mintTemplate.SetBitsWithDifficulty(((Convert.ToSingle(PosDifficulty) - minMarginDifficulty)));
-
-                    var txid = unspent.Id!.Substring(2, 64);
-                    var vout = unspent.Id.Substring(67);
-                    var inunspents = unspents.Any(u => u.txid == txid && u.vout.ToString() == vout);
-                    if (inunspents && templates.All(t => t.Id != mintTemplate.Id))
+ 
+                    if (templates.All(t => t.Id != mintTemplate.Id))
                         templates.Add(mintTemplate);
                 });
             }
@@ -279,7 +279,7 @@ namespace FindstakeNet
         }
 
         static async Task<List<PossibleStake>> EnrichWithTemplateData(List<PossibleStake> resultsStakes, List<MintTemplate> templates, 
-            CheckStakeResult result, uint prevTxOutValue)
+            CheckStakeResult result, ulong prevTxOutValue)
         {
             var possibleStakes = resultsStakes;
             var template = templates.FirstOrDefault(tp => tp.Id == result.Id);
