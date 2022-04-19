@@ -36,8 +36,8 @@ namespace FindstakeNet
            // lets test: 
             Findstake(new Options 
             {                                   
-                User = "IamGroot",   
-                Password = "thisisabigpasswwwwword",     
+                User = "IamGroot",    
+                Password = "thisisabigpasswwwwword",       
                 Port = 9002,                  
                 Address = "2N947RynbLu8xxXJVrTkXr77jwo2UDpnjbT", 
                 // StakeMinAge = 2592000, 
@@ -189,7 +189,10 @@ namespace FindstakeNet
 
                     mintTemplate.SetBitsWithDifficulty(((Convert.ToSingle(PosDifficulty) - minMarginDifficulty)));
 
-                    if (templates.All(t => t.Id != mintTemplate.Id))
+                    var txid = unspent.Id!.Substring(2, 64);
+                    var vout = unspent.Id.Substring(67);
+                    var inunspents = unspents.Any(u => u.txid == txid && u.vout.ToString() == vout);
+                    if (inunspents && templates.All(t => t.Id != mintTemplate.Id))
                         templates.Add(mintTemplate);
                 });
             }
