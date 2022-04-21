@@ -81,8 +81,7 @@ namespace FindstakeNet
             
             // just floor the double:
             var newUnits = Convert.ToUInt64((units * (1 + (0.03 * fractionyears))) + (1.2 * 1000000));
-
-            return 0.000001 * newUnits;
+            return Math.Round(0.000001 * newUnits, 6);           
         }
 
         private static string ConvertFromUnixTimestamp(long timestamp)
