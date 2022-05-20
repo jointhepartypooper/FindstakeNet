@@ -74,16 +74,18 @@ namespace FindstakeNet
         private double CalcNewUnits(uint blocktime, uint futureTimestamp, ulong units)
         {
             /*
-            Equation at 3% plus a basis 1.2 peercoin:
-            A = P(1 + 0.03*t) + 1.2      
+            Equation at 2.9975% plus a basis 1.2 peercoin:
+            A = P(1 + 0.029975*t) + 1.2      
             */   
-            var MaxedAtSecondsInYear = 365 * 24 * 60 * 60;
+            var perc = 0.029975;
+            var YEAR_IN_SECONDS = 31556952; // Average length of year in Gregorian calendar
+ 
             var time = futureTimestamp - blocktime;
-            var seconds = Math.Min(time, MaxedAtSecondsInYear); // cap at 1 year max
-            var fractionyears = (seconds) / (1.0 * MaxedAtSecondsInYear);
+            var seconds = Math.Min(time, YEAR_IN_SECONDS); // cap at 1 year max
+            var fractionyears = (seconds) / (1.0 * YEAR_IN_SECONDS);
             
             // just floor the double:
-            var newUnits = Convert.ToUInt64((units * (1 + (0.03 * fractionyears))) + (1.2 * 1000000));
+            var newUnits = Convert.ToUInt64((units * (1 + (perc * fractionyears))) + (1.2 * 1000000));
             return Math.Round(0.000001 * newUnits, 6);           
         }
 
