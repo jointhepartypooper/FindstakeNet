@@ -6,7 +6,7 @@ namespace FindstakeNet
 {
 	public static class Mint
 	{
-		public static ulong? GetModifier(IReadOnlyList<StakeModifier> blockModifiers, uint curtime, uint findstakelimit)
+		public static StakeModifier? GetModifier(IReadOnlyList<StakeModifier> blockModifiers, uint curtime, uint findstakelimit)
 		{
 			var delta = curtime - findstakelimit;
 			StakeModifier? match = null;
@@ -23,7 +23,7 @@ namespace FindstakeNet
                 }
             }
 
-			return match?.stakeModifier;
+			return match;
 		}
 
 

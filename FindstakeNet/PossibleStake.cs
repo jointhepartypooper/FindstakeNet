@@ -33,6 +33,8 @@ namespace FindstakeNet
         public float MaxDifficulty { get; set; }
 
         public ulong StakeModifier { get; set; }
+
+        public string StakeModifierHex { get; set; }
         public uint BlockFromTime { get; set; }
         public uint PrevTxOffset { get; set; }
         public uint PrevTxTime { get; set; }
@@ -59,6 +61,7 @@ namespace FindstakeNet
             this.StakeDate = ConvertFromUnixTimestamp(result.FutureTimestamp);
             this.MaxDifficulty = result.minimumDifficulty;
             this.StakeModifier = result.StakeModifier;
+            this.StakeModifierHex = result.StakeModifierHex;
             this.BlockFromTime = result.BlockFromTime;
             this.PrevTxOffset = result.PrevTxOffset;
             this.PrevTxTime = result.PrevTxTime;

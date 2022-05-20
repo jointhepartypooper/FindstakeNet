@@ -23,6 +23,7 @@ namespace FindstakeNet
 
         //as used in the CheckStakeKernelHash:
         public ulong StakeModifier;
+        public string StakeModifierHex;
         public uint BlockFromTime;
         public uint PrevTxOffset;
         public uint PrevTxTime;

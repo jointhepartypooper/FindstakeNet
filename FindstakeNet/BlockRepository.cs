@@ -45,24 +45,24 @@
 		{
 			var start = height - 6 * 24 * 31;
 			var end = height;
+			var results = new List<StakeModifier>();
 
 			lock (listlock)
-			{
-				var results = blocks.Where(x => x.h > start && x.h <= end).ToList();
-				if (results.Count > 0)
+			{				 
+				foreach (var block in blocks.Where(x => x.h > start && x.h <= end).OrderBy(o => o.h))
 				{
-					return results
-						.Select(result => new StakeModifier
+					if (results.All(r => r.mr != block.mr))
+					{
+						results.Add(new StakeModifier
 						{
-							bt = result.bt,
-							mr = result.mr,
-							stakeModifier = Convert.ToUInt64(result.mr, 16)
-						})
-						.OrderBy(r => r.bt)
-						.ToList();
+							bt = block.bt,
+							mr = block.mr,
+							stakeModifier = Convert.ToUInt64(block.mr, 16)
+						});	
+					}
 				}
 			}
-			return new List<StakeModifier>();
+			return results;
 		}
 
 

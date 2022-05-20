@@ -29,24 +29,25 @@ namespace FindstakeNet
             _blockRepository = new BlockRepository();
             _transactionRepository = new TransactionRepository(_blockRepository);
  
-            // Parser.Default 
-            //     .ParseArguments<Options>(args) 
-            //     .WithParsed<Options>(Findstake); 
+            Parser.Default 
+                .ParseArguments<Options>(args) 
+                .WithParsed<Options>(Findstake); 
 
            // lets test: 
-            Findstake(new Options 
-            {                                   
-                User = "IamGroot",     
-                Password = "thisisabigpasswwwwword",             
-                Port = 9002,                  
-                Address = "2N947RynbLu8xxXJVrTkXr77jwo2UDpnjbT", 
-                // StakeMinAge = 2592000, 
-                StakeMinAge = 86400, 
-                Findstakelimit= 44099, 
-                //Findstakelimit= 1830080, 
-                RawCoinstakeAddresses = "PACKERrvBkmkPSNNnDsPepbeT72hgwfztz",
-                //Test = true
-            }); 
+           
+            // Findstake(new Options 
+            // {                                   
+            //     User = "somerandomuser",      
+            //     Password = "somerandomandlongpassword",                 
+            //     Port = 8332,                  
+            //     Address = "p92W3t7YkKfQEPDb7cG9jQ6iMh7cpKLvwK", 
+            //     StakeMinAge = 2592000, 
+            //     Findstakelimit= 1830080,  
+            //     // StakeMinAge = 86400, testnet
+            //     // Findstakelimit= 44099, testnet            
+            //     RawCoinstakeAddresses = "pubkey:04c17a7f16a7fdd275af270d24c08c5c1b7dd98e83742782f9b26ab43c9506dea33d396b8a9640d1ea5163dde2de50ffe9a9d2b43f2c2205731ab425d9b8cd4f10",
+            // }); 
+            
         }
 
         public static void Findstake(Options o)
@@ -165,8 +166,7 @@ namespace FindstakeNet
             }
 
             // set negative if expecting a slight increase in POS diff in future:
-            // test reduce the thresthold by half:
-            var minMarginDifficulty = 2.25f;
+            var minMarginDifficulty = -0.35f;
             var templates = new List<MintTemplate>();
 
             var addresses = unspents.Select(un => un.address)
@@ -232,7 +232,7 @@ namespace FindstakeNet
 
                 foreach (var template in templates)
                 {
-                    var result = Mint.CheckStakeKernelHash(template, timestamp, modifier!.Value, StakeMinAge);
+                    var result = Mint.CheckStakeKernelHash(template, timestamp, modifier!.stakeModifier, StakeMinAge);
 
                     switch (result.success)
                     {
@@ -245,6 +245,7 @@ namespace FindstakeNet
                                 minimumDifficulty = result.minimumDifficulty,
                                 FutureTimestamp = timestamp,
                                 StakeModifier = result.StakeModifier,
+                                StakeModifierHex = modifier!.mr,
                                 BlockFromTime = result.BlockFromTime,
                                 PrevTxOffset = result.PrevTxOffset,
                                 PrevTxTime = result.PrevTxTime
@@ -257,7 +258,7 @@ namespace FindstakeNet
                 }
             }
 
-            return resultsStakes;
+            return resultsStakes.OrderBy(s => s.ID).ThenByDescending(s => s.MaxDifficulty).ToList();
         }
 
 
@@ -294,10 +295,10 @@ namespace FindstakeNet
                 var possibleStake = new PossibleStake(prevTxOutValue, result);
 
                 var signers = SignAddresses;
-                await Task.CompletedTask;
-                // possibleStake.RawTransaction = await CreateRawTransactionHash(signers, possibleStake.Address, possibleStake.Uxto,
-                //         possibleStake.Vout, possibleStake.FutureTimestamp,
-                //         possibleStake.NewValueAtFutureTimestamp);
+      
+                possibleStake.RawTransaction = "https://backpacker69.github.io/cointoolkit/?mode=peercoin&verify=" + await CreateRawTransactionHash(signers, possibleStake.Address, possibleStake.Uxto,
+                        possibleStake.Vout, possibleStake.FutureTimestamp,
+                        possibleStake.NewValueAtFutureTimestamp);
 
                 possibleStakes.Add(possibleStake);
             }
