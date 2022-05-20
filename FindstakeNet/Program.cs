@@ -1,4 +1,4 @@
-﻿﻿using CommandLine;
+﻿using CommandLine;
 using Newtonsoft.Json;
 using System.Linq;
 
@@ -238,6 +238,7 @@ namespace FindstakeNet
                     {
                         case true when results.All(r => r.Id != template.Id && r.FutureTimestamp != timestamp):
                             //  Console.WriteLine(" " + template.OfAddress + ": " + ConvertFromUnixTimestamp(timestamp) + " difficulty: " + result.minimumDifficulty.ToString("0.00"));
+                            result.StakeModifierHex = modifier!.mr;
                             results.Add(new CheckStakeResult
                             {
                                 Id = template.Id,
