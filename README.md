@@ -30,11 +30,7 @@ rpcport=8332
 ```
 
 Dependencies for usage:
-.NET 6 runtime
-
-Dependencies for developers:
-NET 6 + Visual Code!!!!!!!!
-see folder FindstakeNet6
+.NET 8 runtime/SDK
 
 How to compile app:
 dotnet publish FindstakeNet.csproj -c Release --runtime linux-x64 --no-self-contained
