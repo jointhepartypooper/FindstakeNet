@@ -1,6 +1,5 @@
 ﻿using CommandLine;
 using Newtonsoft.Json;
-using System.Linq;
 
 namespace FindstakeNet
 {
@@ -14,27 +13,25 @@ namespace FindstakeNet
 
     public class Program
     {
-        static RPCClient? _rpcclient;
-        static BlockRepository? _blockRepository;
-        static TransactionRepository? _transactionRepository;
+        static RPCClient? rpcclient;
+        static BlockRepository? blockRepository;
+        static TransactionRepository? transactionRepository;
 
         private static uint BlockHeight { get; set; }
         private static decimal PosDifficulty { get; set; }
         private static uint Findstakelimit { get; set; }
         private static uint StakeMinAge { get; set; }
-        private static List<string> SignAddresses { get; set; } = new List<string>();
+        private static List<string> SignAddresses { get; set; } = [];
 
         public static void Main(string[] args)
         {
-            _blockRepository = new BlockRepository();
-            _transactionRepository = new TransactionRepository(_blockRepository);
- 
-            Parser.Default 
-                .ParseArguments<Options>(args) 
-                .WithParsed<Options>(Findstake); 
+            blockRepository = new BlockRepository();
+            transactionRepository = new TransactionRepository(blockRepository);
 
-           // lets test: 
-           
+            Parser.Default.ParseArguments<Options>(args).WithParsed(Findstake);
+
+            // lets test: 
+
             // Findstake(new Options 
             // {                                   
             //     User = "somerandomuser",      
@@ -47,16 +44,15 @@ namespace FindstakeNet
             //     // Findstakelimit= 44099, testnet            
             //     RawCoinstakeAddresses = "pubkey:04c17a7f16a7fdd275af270d24c08c5c1b7dd98e83742782f9b26ab43c9506dea33d396b8a9640d1ea5163dde2de50ffe9a9d2b43f2c2205731ab425d9b8cd4f10",
             // }); 
-            
         }
 
         public static void Findstake(Options o)
         {
             var uri = $"http://127.0.0.1:{o.Port}";
-            _rpcclient = new RPCClient(uri, o.User, o.Password);
+            rpcclient = new RPCClient(uri, o.User, o.Password);
 
-            Findstakelimit = (uint) o.Findstakelimit;
-            StakeMinAge = (uint) o.StakeMinAge;
+            Findstakelimit = (uint)o.Findstakelimit;
+            StakeMinAge = (uint)o.StakeMinAge;
 
             if (!string.IsNullOrEmpty(o.RawCoinstakeAddresses))
             {
@@ -74,7 +70,7 @@ namespace FindstakeNet
             else if (o.Test)
             {
                 var _ = new TestMint();
-                var raw = _rpcclient.CreateRawCoinStakeTransaction(new List<RawTxStakeInputs>{
+                var raw = rpcclient.CreateRawCoinStakeTransaction(new List<RawTxStakeInputs>{
                     new RawTxStakeInputs { txid = "13d55957137169ea5367341aeef82802014e3c527f18415e0fa26d1fa625b3e9", vout = 0 }
                 }, new List<RawTxStakeOutput>{
                     new RawTxStakeOutput("PACKERrvBkmkPSNNnDsPepbeT72hgwfztz", 0),
@@ -94,17 +90,18 @@ namespace FindstakeNet
             }
         }
 
+
         public static async Task FindstakeByListUnspent(string file)
         {
-            BlockHeight = await _rpcclient!.GetBlockCount();
-            PosDifficulty = (await _rpcclient.GetDifficulty()).pos;
+            BlockHeight = await rpcclient!.GetBlockCount();
+            PosDifficulty = (await rpcclient.GetDifficulty()).pos;
             if (BlockHeight < 999)
             {
                 ExitWithJson("Not connected to wallet " + BlockHeight, new List<PossibleStake>());
                 return;
             }
 
-            var parser = new BlockChainParser(_rpcclient, _blockRepository!, _transactionRepository!);
+            var parser = new BlockChainParser(rpcclient, blockRepository!, transactionRepository!);
 
             var listunspents = JsonConvert.DeserializeObject<List<Unspent>>(
                 await File.ReadAllTextAsync(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + file));
@@ -124,17 +121,17 @@ namespace FindstakeNet
 
         public static async Task FindstakeByAddress(string peercoinAddress)
         {
-            BlockHeight = await _rpcclient!.GetBlockCount();
-            PosDifficulty = (await _rpcclient.GetDifficulty()).pos;
+            BlockHeight = await rpcclient!.GetBlockCount();
+            PosDifficulty = (await rpcclient.GetDifficulty()).pos;
             if (BlockHeight < 999)
             {
                 ExitWithJson("Not connected to wallet " + BlockHeight, new List<PossibleStake>());
                 return;
             }
 
-            var parser = new BlockChainParser(_rpcclient, _blockRepository!, _transactionRepository!);
+            var parser = new BlockChainParser(rpcclient, blockRepository!, transactionRepository!);
 
-            var unspents = (await _rpcclient.GetUnspents())
+            var unspents = (await rpcclient.GetUnspents())
                 .Where(unspent => unspent.address.Equals(peercoinAddress))
                 .Select(unspent => new UnspentTransactionData
                 {
@@ -143,7 +140,7 @@ namespace FindstakeNet
                     address = unspent.address
                 })
                 .ToList();
-              
+
             if (unspents.Count == 0)
             {
                 ExitWithJson("No unspents to look for ", new List<PossibleStake>());
@@ -152,6 +149,7 @@ namespace FindstakeNet
             await FindStakes(parser, unspents);
         }
 
+
         public static async Task FindStakes(BlockChainParser parser, List<UnspentTransactionData> unspents)
         {
             foreach (var unspent in unspents)
@@ -159,10 +157,10 @@ namespace FindstakeNet
                 unspent.blockhash = await parser.GetBlockHash(unspent.txid);
                 unspent.blockheight = await parser.Parse(unspent.blockhash);
                 await parser.Parse(unspent.blockhash);
-                var block =_blockRepository!.GetBlockState(unspent.blockheight);
+                var block = blockRepository!.GetBlockState(unspent.blockheight);
                 unspent.blocktime = block!.bt;
-                var output = _transactionRepository!.GetOutput(unspent.txid, unspent.vout);
-                unspent.units = output!.units;
+                var output = transactionRepository!.GetOutput(unspent.txid, unspent.vout);
+                unspent.units = output.units;
             }
 
             // set negative if expecting a slight increase in POS diff in future:
@@ -175,12 +173,12 @@ namespace FindstakeNet
 
             foreach (var address in addresses)
             {
-                var unspentsbyaddress = _transactionRepository!.GetUnspents(address)
-                    .Where(unspent => unspents.Any(u => u.txid == unspent.Id!.Substring(2, 64) && u.vout.ToString() == unspent.Id.Substring(67)))
-                    .ToList(); 
+                var unspentsbyaddress = transactionRepository!.GetUnspents(address)
+                    .Where(unspent => unspents.Any(u => u.txid == unspent.Id.Substring(2, 64) && u.vout.ToString() == unspent.Id.Substring(67)))
+                    .ToList();
 
                 unspentsbyaddress.ForEach(unspent =>
-                {                    
+                {
                     var mintTemplate = new MintTemplate(
                         unspent.Id,
                         address,
@@ -191,7 +189,7 @@ namespace FindstakeNet
                         unspent.PrevTxOutValue);
 
                     mintTemplate.SetBitsWithDifficulty(((Convert.ToSingle(PosDifficulty) - minMarginDifficulty)));
- 
+
                     if (templates.All(t => t.Id != mintTemplate.Id))
                         templates.Add(mintTemplate);
                 });
@@ -212,16 +210,17 @@ namespace FindstakeNet
             ExitWithJson(null, futurestakes);
         }
 
+
         public static async Task<IReadOnlyList<PossibleStake>> StartSearch(List<MintTemplate> templates)
         {
-            var lastblock = _blockRepository!.GetBlockState(BlockHeight - 6); //not the very last
+            var lastblock = blockRepository!.GetBlockState(BlockHeight - 6); //not the very last
             var lastblocktime = lastblock!.bt;
 
             var currentTime = ConvertToUnixTimestamp(DateTime.UtcNow);
             var start = currentTime;
             var end = lastblocktime + Findstakelimit;
 
-            var blockModifiers = _blockRepository.GetStakeModifiers(lastblock.h);
+            var blockModifiers = blockRepository.GetStakeModifiers(lastblock.h);
 
             var results = new List<CheckStakeResult>();
             var resultsStakes = new List<PossibleStake>();
@@ -238,7 +237,7 @@ namespace FindstakeNet
                     {
                         case true when results.All(r => r.Id != template.Id && r.FutureTimestamp != timestamp):
                             //  Console.WriteLine(" " + template.OfAddress + ": " + ConvertFromUnixTimestamp(timestamp) + " difficulty: " + result.minimumDifficulty.ToString("0.00"));
-                            result.StakeModifierHex = modifier!.mr;
+                            result.StakeModifierHex = modifier.mr;
                             results.Add(new CheckStakeResult
                             {
                                 Id = template.Id,
@@ -246,7 +245,7 @@ namespace FindstakeNet
                                 minimumDifficulty = result.minimumDifficulty,
                                 FutureTimestamp = timestamp,
                                 StakeModifier = result.StakeModifier,
-                                StakeModifierHex = modifier!.mr,
+                                StakeModifierHex = modifier.mr,
                                 BlockFromTime = result.BlockFromTime,
                                 PrevTxOffset = result.PrevTxOffset,
                                 PrevTxTime = result.PrevTxTime
@@ -280,33 +279,31 @@ namespace FindstakeNet
             File.WriteAllText(fileName, strJson);
         }
 
-        static async Task<List<PossibleStake>> EnrichWithTemplateData(List<PossibleStake> resultsStakes, List<MintTemplate> templates, 
+
+        static async Task<List<PossibleStake>> EnrichWithTemplateData(List<PossibleStake> resultsStakes, List<MintTemplate> templates,
             CheckStakeResult result, ulong prevTxOutValue)
         {
             var possibleStakes = resultsStakes;
             var template = templates.FirstOrDefault(tp => tp.Id == result.Id);
 
-            if (template != null && 
-                result.FutureTimestamp > 0 && 
+            if (template != null &&
+                result.FutureTimestamp > 0 &&
                 !possibleStakes.Any(ps => ps.ID == result.Id && ps.FutureTimestamp == result.FutureTimestamp))
             {
-                var txid = result.Id!.Substring(2, 64);
-                var vout = result.Id.Substring(67);
-
                 var possibleStake = new PossibleStake(prevTxOutValue, result);
 
                 var signers = SignAddresses;
-      
+
                 possibleStake.RawTransaction = "https://backpacker69.github.io/cointoolkit/?mode=peercoin&verify=" + await CreateRawTransactionHash(signers, possibleStake.Address, possibleStake.Uxto,
                         possibleStake.Vout, possibleStake.FutureTimestamp,
                         possibleStake.NewValueAtFutureTimestamp);
 
                 possibleStakes.Add(possibleStake);
             }
-         
+
             return possibleStakes;
         }
- 
+
 
         private static uint ConvertToUnixTimestamp(DateTime datetimestamp)
         {
@@ -314,21 +311,21 @@ namespace FindstakeNet
             return Convert.ToUInt32((datetimestamp - origin).TotalSeconds);
         }
 
-        private static string ConvertFromUnixTimestamp(long timestamp)
-        {
-            var origin = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-            return origin.AddSeconds(timestamp).ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss");
-        }
+        // private static string ConvertFromUnixTimestamp(long timestamp)
+        // {
+        //     var origin = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+        //     return origin.AddSeconds(timestamp).ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss");
+        // }
 
         private static async Task<string> CreateRawTransactionHash(List<string> signers, string address, string txid, int vout, long futureTimestamp, double futureOutput)
         {
-            var inputs = new List<RawTxStakeInputs>{ new RawTxStakeInputs { txid = txid, vout = vout } };
+            var inputs = new List<RawTxStakeInputs> { new RawTxStakeInputs { txid = txid, vout = vout } };
 
-            var outputs = signers!.Select(s => new RawTxStakeOutput(s, 0)).ToList();
+            var outputs = signers.Select(s => new RawTxStakeOutput(s, 0)).ToList();
 
             outputs.Add(new RawTxStakeOutput(address, futureOutput));
 
-           return await _rpcclient!.CreateRawCoinStakeTransaction(inputs, outputs, futureTimestamp);
+            return await rpcclient!.CreateRawCoinStakeTransaction(inputs, outputs, futureTimestamp);
         }
     }
 }

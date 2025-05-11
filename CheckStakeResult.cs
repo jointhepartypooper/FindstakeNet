@@ -9,16 +9,16 @@ namespace FindstakeNet
         /// <summary>
         /// format id: to{{hash}}_{{vout}}		e.g.:to4044279f77475566da7c94a2e96a3bf1796f02a39f96e42e4b1a48cc59fdbf23_1
         /// </summary>
-        public string Id;       
+        public string Id;
 
         public string OfAddress;
-   
+
         public bool success;
-   
+
         public BigInteger minTarget;
-   
+
         public byte[] hash;
-   
+
         public float minimumDifficulty;
 
         //as used in the CheckStakeKernelHash:

@@ -11,7 +11,7 @@ namespace FindstakeNet
         public string Password { get; set; } = null!;
 
         [Option('p', "rpcport", Required = false, Default = 8332, HelpText = "rpcport")]
-        public int? Port { get; set; } 
+        public int? Port { get; set; }
 
         [Option('i', "listunspent", Required = false, Default = "", HelpText = "input json file with listunspent")]
         public string? FileListUnspent { get; set; }
@@ -22,10 +22,10 @@ namespace FindstakeNet
         [Option('v', "verbose", Required = false, HelpText = "Set output to verbose messages.")]
         public bool Verbose { get; set; }
 
-        [Option('m', "stakeminage", Required = false, Default= 2592000, HelpText = "time to wait after stake. 86400 in testnet")]
+        [Option('m', "stakeminage", Required = false, Default = 2592000, HelpText = "time to wait after stake. 86400 in testnet")]
         public long StakeMinAge { get; set; }
 
-        [Option('l', "findstakelimit", Required = false, Default= 1830080, HelpText = "StakeMinAge - 761920. 44099 in testnet")]
+        [Option('l', "findstakelimit", Required = false, Default = 1830080, HelpText = "StakeMinAge - 761920. 44099 in testnet")]
         public long Findstakelimit { get; set; }
 
         [Option('r', "rawcoinstakesigners", Required = false, HelpText = "comma separated peercoin addresses used for signing")]
@@ -34,5 +34,4 @@ namespace FindstakeNet
         [Option('t', "test", Required = false, HelpText = "run build-in tests")]
         public bool Test { get; set; }
     }
-
 }

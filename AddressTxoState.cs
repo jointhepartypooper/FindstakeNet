@@ -1,6 +1,6 @@
-﻿// ReSharper disable InconsistentNaming
-namespace FindstakeNet
+﻿namespace FindstakeNet
 {
+    // ReSharper disable InconsistentNaming
     public class AddressTxoState
     {
         public string address { get; set; } = null!;
